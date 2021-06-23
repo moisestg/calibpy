@@ -1,0 +1,6 @@
+setuptools==56.0.0
+wheel==0.36.2
+twine==3.4.1
+typing==3.7.4.3
+opencv-python==4.5.2.54
+numpy==1.21.0
