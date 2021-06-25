@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import cv2 as cv
 import numpy as np
 
@@ -112,7 +112,7 @@ def click_tracking_points(
     """
     """
     image = image.copy()
-    points = []
+    points: List[np.ndarray] = []
     cv.namedWindow('image', cv.WINDOW_NORMAL)
     cv.resizeWindow('image', *wh)
     cv.setMouseCallback('image', click_point, [image, points])
@@ -141,8 +141,8 @@ def track_points_image(
 def track_points_seq(images: np.ndarray, wh: Tuple[int, int]):
     """
     """
-    initial_points = click_tracking_points(images[0], wh)
-    initial_points = np.float32(initial_points)
+    initial_points: np.ndarray = click_tracking_points(images[0], wh)
+    initial_points = np.float32(initial_points)  # type: ignore
     points = [initial_points]
     prev_points = initial_points
     prev_image = cv.cvtColor(images[0], cv.COLOR_BGR2GRAY)
