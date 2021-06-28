@@ -2,21 +2,11 @@ import os
 from typing import Optional, Tuple, List
 import cv2 as cv
 import numpy as np
-from scipy.spatial import ConvexHull, convex_hull_plot_2d
-import matplotlib.pyplot as plt
-from matplotlib.path import Path
 
 
 LK_PARAMS = dict(
     winSize=(31, 31), maxLevel=3,
     criteria=(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 30, 0.03))
-
-
-def read_image(image_path: str) -> np.ndarray:
-    """
-    """
-    image = cv.imread(image_path)
-    return image
 
 
 def get_frame(vidcap: cv.VideoCapture, msec: Optional[float] = None):
@@ -119,7 +109,7 @@ def click_point(event, x, y, flags, param):  # param
 
 def click_tracking_points(
         image: np.ndarray, wh: Tuple[int, int]) -> np.ndarray:
-    """ Click points up to down, left to right (column wise)
+    """
     """
     image = image.copy()
     points: List[np.ndarray] = []
@@ -163,100 +153,3 @@ def track_points_seq(images: np.ndarray, wh: Tuple[int, int]):
         prev_points = next_points
         prev_image = curr_image
     return np.int_(np.stack(points))
-
-
-def generate_homogeneous_board_points(
-        board_side: float = .025, board_rows: int = 4, board_cols: int = 4
-        ) -> np.ndarray:
-    """ Column wise
-    """
-    board_points = []
-    for c in range(board_cols):
-        for r in range(board_rows):
-            board_points.append(np.array([c*board_side, r*board_side, 1]))
-    return np.stack(board_points)
-
-
-def generate_eqspaced_image_points(
-        max_x: int, max_y: int, board_rows: int = 4, board_cols: int = 4
-        ) -> np.ndarray:
-    """
-    """
-    image_points = []
-    for x in np.linspace(0, max_x, board_rows):
-        for y in np.linspace(0, max_y, board_cols):
-            image_points.append(np.array([x, y]))
-    return np.stack(image_points)
-
-
-def estimate_homography(
-        image_points: np.ndarray, board_points: np.ndarray) -> np.ndarray:
-    """ Direct Linear Transform (DLT) Homography estimation
-    """
-    num_points = image_points.shape[0]
-    assert num_points == board_points.shape[0]
-    A = np.zeros((3*num_points, 9))
-    for i in range(num_points):
-        X = board_points[i]
-        x = image_points[i]
-        u, v = x
-        A[3*i, 3:6] = -X
-        A[3*i, 6:9] = v*X
-        A[3*i+1, 0:3] = X
-        A[3*i+1, 6:9] = -u*X
-        A[3*i+2, 0:3] = -v*X
-        A[3*i+2, 3:6] = u*X
-    _, _, Vt = np.linalg.svd(A)
-    h = Vt[-1, :]
-    H = h.reshape((3, 3))
-    return H
-
-
-def calculate_interior_points(
-        points: np.ndarray, plot_hull: bool = False) -> np.ndarray:
-    """ Compute convex hull of the points and check if an image point is
-        inside the poligon and return those as a numpy array.
-
-        Clicked points have increasing Y in downward direction so we have to
-        invert so the shape is plot as seen in the image!
-
-        image_dims: Specified as (image_max_x, image_max_y)
-    """
-    if plot_hull:
-        plot_points = points.copy()
-        plot_points[:, 1] = -plot_points[:, 1]
-        p_hull = ConvexHull(plot_points)
-        _ = convex_hull_plot_2d(p_hull)
-        plt.show()
-    int_points: List[np.ndarray] = []
-    hull = ConvexHull(points)
-    hull_path = Path(points[hull.vertices])
-    min_x, min_y = np.min(points, axis=0)
-    max_x, max_y = np.max(points, axis=0)
-    for x in range(min_x, max_x):
-        for y in range(min_y, max_y):
-            curr_p = np.array([x, y])
-            if hull_path.contains_point(curr_p):
-                int_points.append(curr_p)
-    return np.stack(int_points)
-
-
-def project_image(
-        image: np.ndarray, proj_image: np.ndarray, proj_points: np.ndarray,
-        H: np.ndarray) -> np.ndarray:
-    """
-    """
-    image = image.copy()
-    homogeneous_proj_points = np.hstack(
-        (proj_points, np.ones((proj_points.shape[0], 1))))
-    proj_image_points = np.matmul(H, homogeneous_proj_points.T).T
-    proj_image_points = proj_image_points[:, 0:2] / proj_image_points[:, 2:3]
-    proj_image_points = np.rint(proj_image_points).astype(np.int_)
-    proj_image_dims = proj_image.shape[0:2][::-1]
-    np.clip(proj_image_points[:, 0], 0, proj_image_dims[0]-1,
-            proj_image_points[:, 0])
-    np.clip(proj_image_points[:, 1], 0, proj_image_dims[1]-1,
-            proj_image_points[:, 1])
-    image[proj_points[:, 1], proj_points[:, 0]] = proj_image[
-        proj_image_points[:, 1], proj_image_points[:, 0]]
-    return image
