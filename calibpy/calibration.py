@@ -242,8 +242,21 @@ def calculate_interior_points(
 
 
 def project_image(
-        image: np.ndarray, proj_image: np.ndarray, int_points: np.ndarray,
-        H: np.ndarray):
+        image: np.ndarray, proj_image: np.ndarray, proj_points: np.ndarray,
+        H: np.ndarray) -> np.ndarray:
     """
     """
-    return
+    image = image.copy()
+    homogeneous_proj_points = np.hstack(
+        (proj_points, np.ones((proj_points.shape[0], 1))))
+    proj_image_points = np.matmul(H, homogeneous_proj_points.T).T
+    proj_image_points = proj_image_points[:, 0:2] / proj_image_points[:, 2:3]
+    proj_image_points = np.rint(proj_image_points).astype(np.int_)
+    proj_image_dims = proj_image.shape[0:2][::-1]
+    np.clip(proj_image_points[:, 0], 0, proj_image_dims[0]-1,
+            proj_image_points[:, 0])
+    np.clip(proj_image_points[:, 1], 0, proj_image_dims[1]-1,
+            proj_image_points[:, 1])
+    image[proj_points[:, 1], proj_points[:, 0]] = proj_image[
+        proj_image_points[:, 1], proj_image_points[:, 0]]
+    return image
