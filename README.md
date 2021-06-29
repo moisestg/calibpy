@@ -29,9 +29,7 @@ Which has the form of a least-squares problem of the form $A\mathbf{\overrightar
 
 ## Intrinsic camera matrix estimation
 
-Bla [3][3]
-
-
+Check for full derivation: [3][3]
 
 
 [//]: # (REFERENCES)
@@ -39,8 +37,4 @@ Bla [3][3]
 
 [2]: https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/FUSIELLO4/tutorial.html#x1-40003.1
 
-[3]: https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/FUSIELLO4/tutorial.html#x1-660007.4.1
-
-
-
-
+[3]: https://www.researchgate.net/profile/Wilhelm-Burger/publication/303233579_Zhang's_Camera_Calibration_Algorithm_In-Depth_Tutorial_and_Implementation/links/5eaad8c9a6fdcc70509c3c9b/Zhangs-Camera-Calibration-Algorithm-In-Depth-Tutorial-and-Implementation.pdf
